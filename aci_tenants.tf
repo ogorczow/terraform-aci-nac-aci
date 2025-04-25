@@ -1006,6 +1006,7 @@ locals {
                 description = try(nh.description, "")
                 preference  = try(nh.preference, local.defaults.apic.tenants.l3outs.node_profiles.nodes.static_routes.next_hops.preference)
                 type        = try(nh.type, local.defaults.apic.tenants.l3outs.node_profiles.nodes.static_routes.next_hops.type)
+                ip_sla_policy = try("${nh.ip_sla_policy}${local.defaults.apic.tenants.policies.ip_sla_policies.name_suffix}", "")
               }]
             }]
           }]
@@ -1061,6 +1062,7 @@ module "aci_l3out_node_profile_manual" {
   depends_on = [
     module.aci_tenant,
     module.aci_l3out,
+    module.aci_ip_sla_policy,
   ]
 }
 

@@ -49,6 +49,7 @@ variable "nodes" {
         description = optional(string, "")
         preference  = optional(number, 1)
         type        = optional(string, "prefix")
+        ip_sla_policy = optional(string)
       })), [])
     })), [])
   }))
@@ -304,5 +305,16 @@ variable "bgp_as_path_policy" {
   validation {
     condition     = can(regex("^[a-zA-Z0-9_.:-]{0,64}$", var.bgp_as_path_policy))
     error_message = "Allowed characters: `a`-`z`, `A`-`Z`, `0`-`9`, `_`, `.`, `:`, `-`. Maximum characters: 64."
+  }
+}
+
+variable "ip_sla_policy"{
+  description = "Next hop IP SLA Policy"
+  type = string
+  default = ""
+
+  validation {
+    condition = can()
+    error_message = "value"
   }
 }

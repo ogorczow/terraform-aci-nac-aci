@@ -293,3 +293,12 @@ resource "aci_rest_managed" "bgpRsBestPathCtrlPol" {
     tnBgpBestPathCtrlPolName = var.bgp_as_path_policy
   }
 }
+
+resource "aci_rest_managed" "ipRsNHTrackMember" {
+  count      = var.ip_sla_policy != "" ? 1 : 0
+  dn         = "${aci_rest_managed.ipRouteP[each.value.static_route].dn}/nh-[${each.value.ip}]/rsNHTrackMember"
+  class_name = "ipRsNHTrackMember"
+  content = {
+    tDn = "uni/tn-${var.tenant}/trackmember-_${var.ip_sla_policy}"
+  }
+}
