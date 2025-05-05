@@ -1193,29 +1193,30 @@ locals {
               }
             ]
             interfaces = [for int in try(ip.interfaces, []) : {
-              ip              = try(int.ip, "")
-              svi             = try(int.svi, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.svi)
-              autostate       = try(int.autostate, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.autostate)
-              floating_svi    = try(int.floating_svi, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.floating_svi)
-              vlan            = try(int.vlan, null)
-              description     = try(int.description, "")
-              type            = try(int.port, null) != null ? "access" : try([for pg in local.leaf_interface_policy_group_mapping : pg.type if pg.name == int.channel][0], try(int.node2_id, null) != null ? "vpc" : "pc")
-              mac             = try(int.mac, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.mac)
-              mtu             = try(int.mtu, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.mtu)
-              mode            = try(int.mode, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.mode)
-              node_id         = try(int.node_id, try(int.channel, null) != null ? try([for pg in local.leaf_interface_policy_group_mapping : pg.node_ids if pg.name == int.channel][0][0], null) : null)
-              node2_id        = try(int.node2_id, try(int.channel, null) != null ? try([for pg in local.leaf_interface_policy_group_mapping : pg.type if pg.name == int.channel && pg.type == "vpc"][0], null) : null)
-              pod_id          = try(int.pod_id, null)
-              module          = try(int.module, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.module)
-              port            = try(int.port, null)
-              sub_port        = try(int.sub_port, null)
-              channel         = try("${int.channel}${local.defaults.apic.access_policies.leaf_interface_policy_groups.name_suffix}", null)
-              ip_a            = try(int.ip_a, null)
-              ip_b            = try(int.ip_b, null)
-              ip_shared       = try(int.ip_shared, null)
-              lladdr          = try(int.link_local_address, null)
-              scope           = try(int.scope, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.scope)
-              multipod_direct = tenant.name == "infra" ? try(int.multipod_direct, false) : false
+              ip                   = try(int.ip, "")
+              svi                  = try(int.svi, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.svi)
+              autostate            = try(int.autostate, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.autostate)
+              floating_svi         = try(int.floating_svi, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.floating_svi)
+              vlan                 = try(int.vlan, null)
+              description          = try(int.description, "")
+              type                 = try(int.port, null) != null ? "access" : try([for pg in local.leaf_interface_policy_group_mapping : pg.type if pg.name == int.channel][0], try(int.node2_id, null) != null ? "vpc" : "pc")
+              mac                  = try(int.mac, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.mac)
+              mtu                  = try(int.mtu, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.mtu)
+              mode                 = try(int.mode, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.mode)
+              node_id              = try(int.node_id, try(int.channel, null) != null ? try([for pg in local.leaf_interface_policy_group_mapping : pg.node_ids if pg.name == int.channel][0][0], null) : null)
+              node2_id             = try(int.node2_id, try(int.channel, null) != null ? try([for pg in local.leaf_interface_policy_group_mapping : pg.type if pg.name == int.channel && pg.type == "vpc"][0], null) : null)
+              pod_id               = try(int.pod_id, null)
+              module               = try(int.module, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.module)
+              port                 = try(int.port, null)
+              sub_port             = try(int.sub_port, null)
+              channel              = try("${int.channel}${local.defaults.apic.access_policies.leaf_interface_policy_groups.name_suffix}", null)
+              ip_a                 = try(int.ip_a, null)
+              ip_b                 = try(int.ip_b, null)
+              ip_shared            = try(int.ip_shared, null)
+              ip_shared_dhcp_relay = try(int.ip_shared_dhcp_relay, null)
+              lladdr               = try(int.link_local_address, null)
+              scope                = try(int.scope, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.scope)
+              multipod_direct      = tenant.name == "infra" ? try(int.multipod_direct, false) : false
               bgp_peers = [for peer in try(int.bgp_peers, []) : {
                 ip                               = peer.ip
                 remote_as                        = peer.remote_as
@@ -1308,6 +1309,7 @@ module "aci_l3out_interface_profile_manual" {
     ip_a                     = int.ip_a
     ip_b                     = int.ip_b
     ip_shared                = int.ip_shared
+    ip_shared_dhcp_relay     = int.ip_shared_dhcp_relay
     lladdr                   = int.lladdr
     bgp_peers                = int.bgp_peers
     paths                    = int.paths
@@ -1355,29 +1357,30 @@ locals {
         ]
         interfaces = flatten([for node in try(l3out.nodes, []) : [
           for int in try(node.interfaces, []) : {
-            ip              = try(int.ip, "")
-            svi             = try(int.svi, local.defaults.apic.tenants.l3outs.nodes.interfaces.svi)
-            autostate       = try(int.autostate, local.defaults.apic.tenants.l3outs.nodes.interfaces.autostate)
-            floating_svi    = try(int.floating_svi, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.floating_svi)
-            vlan            = try(int.vlan, null)
-            description     = try(int.description, "")
-            type            = try(int.port, null) != null ? "access" : try([for pg in local.leaf_interface_policy_group_mapping : pg.type if pg.name == int.channel][0], try(int.node2_id, null) != null ? "vpc" : "pc")
-            mac             = try(int.mac, local.defaults.apic.tenants.l3outs.nodes.interfaces.mac)
-            mtu             = try(int.mtu, local.defaults.apic.tenants.l3outs.nodes.interfaces.mtu)
-            mode            = try(int.mode, local.defaults.apic.tenants.l3outs.nodes.interfaces.mode)
-            node_id         = try(node.node_id, [for pg in local.leaf_interface_policy_group_mapping : pg.node_ids if pg.name == int.channel][0][0], null)
-            node2_id        = try(int.node2_id, [for pg in local.leaf_interface_policy_group_mapping : pg.type if pg.name == int.channel && pg.type == "vpc"][0], null)
-            pod_id          = try(node.pod_id, [for node_ in local.node_policies.nodes : node_.pod if node_.id == node.node_id][0], local.defaults.apic.tenants.l3outs.nodes.interfaces.pod)
-            module          = try(int.module, local.defaults.apic.tenants.l3outs.nodes.interfaces.module)
-            port            = try(int.port, null)
-            sub_port        = try(int.sub_port, null)
-            channel         = try("${int.channel}${local.defaults.apic.access_policies.leaf_interface_policy_groups.name_suffix}", null)
-            ip_a            = try(int.ip_a, null)
-            ip_b            = try(int.ip_b, null)
-            ip_shared       = try(int.ip_shared, null)
-            lladdr          = try(int.link_local_address, null)
-            scope           = try(int.scope, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.scope)
-            multipod_direct = tenant.name == "infra" ? try(int.multipod_direct, false) : false
+            ip                   = try(int.ip, "")
+            svi                  = try(int.svi, local.defaults.apic.tenants.l3outs.nodes.interfaces.svi)
+            autostate            = try(int.autostate, local.defaults.apic.tenants.l3outs.nodes.interfaces.autostate)
+            floating_svi         = try(int.floating_svi, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.floating_svi)
+            vlan                 = try(int.vlan, null)
+            description          = try(int.description, "")
+            type                 = try(int.port, null) != null ? "access" : try([for pg in local.leaf_interface_policy_group_mapping : pg.type if pg.name == int.channel][0], try(int.node2_id, null) != null ? "vpc" : "pc")
+            mac                  = try(int.mac, local.defaults.apic.tenants.l3outs.nodes.interfaces.mac)
+            mtu                  = try(int.mtu, local.defaults.apic.tenants.l3outs.nodes.interfaces.mtu)
+            mode                 = try(int.mode, local.defaults.apic.tenants.l3outs.nodes.interfaces.mode)
+            node_id              = try(node.node_id, [for pg in local.leaf_interface_policy_group_mapping : pg.node_ids if pg.name == int.channel][0][0], null)
+            node2_id             = try(int.node2_id, [for pg in local.leaf_interface_policy_group_mapping : pg.type if pg.name == int.channel && pg.type == "vpc"][0], null)
+            pod_id               = try(node.pod_id, [for node_ in local.node_policies.nodes : node_.pod if node_.id == node.node_id][0], local.defaults.apic.tenants.l3outs.nodes.interfaces.pod)
+            module               = try(int.module, local.defaults.apic.tenants.l3outs.nodes.interfaces.module)
+            port                 = try(int.port, null)
+            sub_port             = try(int.sub_port, null)
+            channel              = try("${int.channel}${local.defaults.apic.access_policies.leaf_interface_policy_groups.name_suffix}", null)
+            ip_a                 = try(int.ip_a, null)
+            ip_b                 = try(int.ip_b, null)
+            ip_shared            = try(int.ip_shared, null)
+            ip_shared_dhcp_relay = try(int.ip_shared_dhcp_relay, null)
+            lladdr               = try(int.link_local_address, null)
+            scope                = try(int.scope, local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.interfaces.scope)
+            multipod_direct      = tenant.name == "infra" ? try(int.multipod_direct, false) : false
             bgp_peers = [for peer in try(int.bgp_peers, []) : {
               ip                               = peer.ip
               remote_as                        = peer.remote_as
@@ -1467,6 +1470,7 @@ module "aci_l3out_interface_profile_auto" {
     ip_a                     = int.ip_a
     ip_b                     = int.ip_b
     ip_shared                = int.ip_shared
+    ip_shared_dhcp_relay     = int.ip_shared_dhcp_relay
     lladdr                   = int.lladdr
     bgp_peers                = int.bgp_peers
     paths                    = int.paths
@@ -3262,6 +3266,7 @@ locals {
         threshold_down_action  = try(policy.threshold_down_action, local.defaults.apic.tenants.services.redirect_policies.threshold_down_action)
         ip_sla_policy          = try("${policy.ip_sla_policy}${local.defaults.apic.tenants.policies.ip_sla_policies.name_suffix}", "")
         redirect_backup_policy = try("${policy.redirect_backup_policy}${local.defaults.apic.tenants.services.redirect_backup_policies.name_suffix}", "")
+        rewrite_source_mac     = try(policy.rewrite_source_mac, null)
         l3_destinations = [for dest in try(policy.l3_destinations, []) : {
           description           = try(dest.description, "")
           name                  = try(dest.name, "")
@@ -3308,6 +3313,7 @@ module "aci_redirect_policy" {
   redirect_backup_policy = each.value.redirect_backup_policy
   l3_destinations        = each.value.l3_destinations
   l1l2_destinations      = each.value.l1l2_destinations
+  rewrite_source_mac     = each.value.rewrite_source_mac
 
   depends_on = [
     module.aci_tenant,
