@@ -25,6 +25,8 @@ locals {
             description  = nh.description
             preference   = nh.preference == 0 ? "unspecified" : nh.preference
             type         = nh.type
+            ip_sla_policy = nh.ip_sla_policy
+            track_list  = nh.track_list
           }
         }
       ]
@@ -294,11 +296,69 @@ resource "aci_rest_managed" "bgpRsBestPathCtrlPol" {
   }
 }
 
+resource "aci_rest_managed" "ipRsNexthopRouteTrack" {
+  for_each   = { for next_hop in local.next_hops : next_hop.key => next_hop.value if next_hop.value.ip_sla_policy != null || next_hop.value.track_list != null }
+  dn         = "${aci_rest_managed.ipRouteP[each.value.static_route].dn}/nh-[${each.value.ip}]/rsNexthopRouteTrack"
+  class_name = "ipRsNexthopRouteTrack"
+  content = {
+    tDn = format("%s%s","uni/tn-${var.tenant}/tracklist-", each.value.ip_sla_policy != null ? "${var.vrf}_${each.value.ip}" : "${each.value.track_list}")
+  }
+}
+
 resource "aci_rest_managed" "ipRsNHTrackMember" {
-  count      = var.ip_sla_policy != "" ? 1 : 0
+  for_each   = { for next_hop in local.next_hops : next_hop.key => next_hop.value if next_hop.value.ip_sla_policy != null }
   dn         = "${aci_rest_managed.ipRouteP[each.value.static_route].dn}/nh-[${each.value.ip}]/rsNHTrackMember"
   class_name = "ipRsNHTrackMember"
   content = {
-    tDn = "uni/tn-${var.tenant}/trackmember-_${var.ip_sla_policy}"
+    tDn = "uni/tn-${var.tenant}/trackmember-${var.vrf}_${each.value.ip}"
   }
+}
+
+resource "aci_rest_managed" "fvTrackList" {
+  for_each   = { for next_hop in local.next_hops : next_hop.key => next_hop.value if next_hop.value.ip_sla_policy != null }
+  dn         = "uni/tn-${var.tenant}/tracklist-${var.vrf}_${each.value.ip}"
+  class_name = "fvTrackList"
+  content = {
+    name           = "${var.vrf}_${each.value.ip}"
+  }
+  depends_on = [
+    aci_rest_managed.fvTrackMember,
+  ]
+}
+
+resource "aci_rest_managed" "fvTrackMember" {
+  for_each   = { for next_hop in local.next_hops : next_hop.key => next_hop.value if next_hop.value.ip_sla_policy != null }
+  dn         = "uni/tn-${var.tenant}/trackmember-${var.vrf}_${each.value.ip}"
+  class_name = "fvTrackMember"
+  content = {
+    name      = "${var.vrf}_${each.value.ip}"
+    dstIpAddr = each.value.ip
+    scopeDn   = "uni/tn-${var.tenant}/out-${var.vrf}"
+
+  }
+}
+
+resource "aci_rest_managed" "fvRsOtmListMember" {
+  for_each   = { for next_hop in local.next_hops : next_hop.key => next_hop.value if next_hop.value.ip_sla_policy != null }
+  dn         = "uni/tn-${var.tenant}/tracklist-${var.vrf}_${each.value.ip}/rsotmListMember-[uni/tn-${var.tenant}/trackmember-${var.vrf}_${each.value.ip}]"
+  class_name = "fvRsOtmListMember"
+  content = {
+    tDn = "uni/tn-${var.tenant}/trackmember-${var.vrf}_${each.value.ip}"
+  }
+  depends_on = [
+    aci_rest_managed.fvTrackMember,
+    aci_rest_managed.fvTrackList,
+  ]
+} 
+
+resource "aci_rest_managed" "fvRsIpslaMonPol" {
+  for_each   = { for next_hop in local.next_hops : next_hop.key => next_hop.value if next_hop.value.ip_sla_policy != null }
+  dn         = "uni/tn-${var.tenant}/trackmember-${var.vrf}_${each.value.ip}/rsIpslaMonPol"
+  class_name = "fvRsIpslaMonPol"
+  content = {
+    tDn = "uni/tn-${var.tenant}/ipslaMonitoringPol-${each.value.ip_sla_policy}"
+  }
+  depends_on = [
+    aci_rest_managed.fvTrackMember,
+  ]
 }

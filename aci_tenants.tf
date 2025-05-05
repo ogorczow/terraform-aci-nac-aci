@@ -983,6 +983,7 @@ locals {
           key                       = format("%s/%s/%s", tenant.name, l3out.name, np.name)
           tenant                    = tenant.name
           l3out                     = l3out.name
+          vrf                       = l3out.vrf
           name                      = "${np.name}${local.defaults.apic.tenants.l3outs.node_profiles.name_suffix}"
           multipod                  = try(l3out.multipod, local.defaults.apic.tenants.l3outs.multipod)
           remote_leaf               = try(l3out.remote_leaf, local.defaults.apic.tenants.l3outs.remote_leaf)
@@ -1006,7 +1007,8 @@ locals {
                 description = try(nh.description, "")
                 preference  = try(nh.preference, local.defaults.apic.tenants.l3outs.node_profiles.nodes.static_routes.next_hops.preference)
                 type        = try(nh.type, local.defaults.apic.tenants.l3outs.node_profiles.nodes.static_routes.next_hops.type)
-                ip_sla_policy = try("${nh.ip_sla_policy}${local.defaults.apic.tenants.policies.ip_sla_policies.name_suffix}", "")
+                ip_sla_policy = try("${nh.ip_sla_policy}${local.defaults.apic.tenants.policies.ip_sla_policies.name_suffix}", null)
+                track_list = try("${nh.track_list}${local.defaults.apic.tenants.policies.track_lists.name_suffix}", null)
               }]
             }]
           }]
@@ -1050,6 +1052,7 @@ module "aci_l3out_node_profile_manual" {
   for_each                  = { for np in local.node_profiles_manual : np.key => np if local.modules.aci_l3out_node_profile && var.manage_tenants }
   tenant                    = each.value.tenant
   l3out                     = each.value.l3out
+  vrf                       = each.value.vrf
   name                      = each.value.name
   multipod                  = each.value.multipod
   remote_leaf               = each.value.remote_leaf
@@ -1138,6 +1141,7 @@ module "aci_l3out_node_profile_auto" {
   for_each                  = { for np in local.node_profiles_auto : np.key => np if local.modules.aci_l3out_node_profile && var.manage_tenants }
   tenant                    = each.value.tenant
   l3out                     = each.value.l3out
+  vrf                       = each.value.vrf
   name                      = each.value.name
   multipod                  = each.value.multipod
   remote_leaf               = each.value.remote_leaf
@@ -1162,6 +1166,7 @@ locals {
             key                          = format("%s/%s/%s/%s", tenant.name, l3out.name, np.name, ip.name)
             tenant                       = tenant.name
             l3out                        = l3out.name
+            vrf                          = l3out.vrf
             node_profile                 = np.name
             name                         = "${ip.name}${local.defaults.apic.tenants.l3outs.node_profiles.interface_profiles.name_suffix}"
             description                  = try(ip.description, "")
@@ -1669,6 +1674,7 @@ module "aci_sr_mpls_l3out_node_profile_manual" {
   for_each                 = { for np in local.sr_mpls_node_profiles_manual : np.key => np if try(local.modules.aci_sr_mpls_l3out_node_profile, true) && var.manage_tenants }
   tenant                   = each.value.tenant
   l3out                    = each.value.l3out
+  vrf                      = each.value.vrf
   name                     = each.value.name
   sr_mpls                  = each.value.sr_mpls
   mpls_custom_qos_policy   = each.value.mpls_custom_qos_policy
@@ -1691,6 +1697,7 @@ locals {
             key                  = format("%s/%s/%s/%s", tenant.name, l3out.name, np.name, ip.name)
             tenant               = tenant.name
             l3out                = l3out.name
+            vrf                  = l3out.vrf
             node_profile         = np.name
             sr_mpls              = true
             transport_data_plane = l3out.transport_data_plane
