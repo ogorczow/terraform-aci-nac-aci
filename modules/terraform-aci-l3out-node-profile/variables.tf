@@ -18,16 +18,6 @@ variable "l3out" {
   }
 }
 
-variable "vrf"{
-  description = "VRF name."
-  type        = string
-
-  validation {
-    condition     = can(regex("^[a-zA-Z0-9_.:-]{0,64}$", var.vrf))
-    error_message = "Allowed characters: `a`-`z`, `A`-`Z`, `0`-`9`, `_`, `.`, `:`, `-`. Maximum characters: 64."
-  }
-}
-
 variable "name" {
   description = "Node profile name."
   type        = string
@@ -45,7 +35,7 @@ variable "nodes" {
     pod_id                  = optional(number, 1)
     router_id               = string
     router_id_as_loopback   = optional(bool, true)
-    loopbacks               = optional(list(string))
+    loopback                = optional(string)
     mpls_transport_loopback = optional(string)
     segment_id              = optional(number)
     static_routes = optional(list(object({
@@ -285,17 +275,6 @@ variable "bfd_multihop_node_policy" {
   }
 }
 
-variable "bgp_protocol_profile_name" {
-  description = "BGP Protocol Name."
-  type        = string
-  default     = ""
-
-  validation {
-    condition     = can(regex("^[a-zA-Z0-9_.:-]{0,64}$", var.bgp_protocol_profile_name))
-    error_message = "Allowed characters: `a`-`z`, `A`-`Z`, `0`-`9`, `_`, `.`, `:`, `-`. Maximum characters: 64."
-  }
-}
-
 variable "bgp_timer_policy" {
   description = "Node Profile's BGP Timer Policy"
   type        = string
@@ -315,6 +294,17 @@ variable "bgp_as_path_policy" {
 
   validation {
     condition     = can(regex("^[a-zA-Z0-9_.:-]{0,64}$", var.bgp_as_path_policy))
+    error_message = "Allowed characters: `a`-`z`, `A`-`Z`, `0`-`9`, `_`, `.`, `:`, `-`. Maximum characters: 64."
+  }
+}
+
+variable "vrf"{
+  description = "VRF name."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.vrf == null || can(regex("^[a-zA-Z0-9_.:-]{0,64}$", var.vrf)) 
     error_message = "Allowed characters: `a`-`z`, `A`-`Z`, `0`-`9`, `_`, `.`, `:`, `-`. Maximum characters: 64."
   }
 }
