@@ -1156,6 +1156,8 @@ module "aci_l3out_node_profile_auto" {
   depends_on = [
     module.aci_tenant,
     module.aci_l3out,
+    module.aci_ip_sla_policy,
+
   ]
 }
 
