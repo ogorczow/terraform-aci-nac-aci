@@ -32,8 +32,18 @@ locals {
       ]
     ]
   ])
+  loopback_list = flatten([
+    for node in var.nodes : [
+      for lp in coalesce(node.loopbacks, []) : {
+        key = "${node.node_id}/${lp}"
+        value = {
+          ip   = lp
+          node = node.node_id
+        }
+      }
+    ]
+  ])
 }
-
 
 resource "aci_rest_managed" "l3extLNodeP" {
   dn         = "uni/tn-${var.tenant}/out-${var.l3out}/lnodep-${var.name}"

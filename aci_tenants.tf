@@ -1066,6 +1066,7 @@ module "aci_l3out_node_profile_manual" {
     module.aci_tenant,
     module.aci_l3out,
     module.aci_ip_sla_policy,
+    module.aci_track_list,
   ]
 }
 
@@ -1157,7 +1158,7 @@ module "aci_l3out_node_profile_auto" {
     module.aci_tenant,
     module.aci_l3out,
     module.aci_ip_sla_policy,
-
+    module.aci_track_list,
   ]
 }
 
@@ -3723,7 +3724,6 @@ locals {
   ]
 }
 
-
 module "aci_track_list" {
   source = "./modules/terraform-aci-track-list"
 
@@ -3737,6 +3737,11 @@ module "aci_track_list" {
   weight_up       = each.value.weight_up
   weight_down     = each.value.weight_down
   track_members   = each.value.track_members
+
+  depends_on = [
+    module.aci_tenant,
+    module.aci_track_member,
+  ]
 }
 
 locals {
@@ -3798,6 +3803,12 @@ module "aci_track_member" {
   scope_type     = each.value.scope_type
   scope          = each.value.scope
   ip_sla_policy  = each.value.ip_sla_policy
+
+  depends_on = [
+    module.aci_tenant,
+    module.aci_ip_sla_policy,
+    module.aci_l3out,
+  ]
 }
 
 locals {
