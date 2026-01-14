@@ -1,5 +1,7 @@
 ## training example
+- something
 - Added first example
+- something
 
 ## 1.2.0
 
