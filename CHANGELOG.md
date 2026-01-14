@@ -1,8 +1,10 @@
 ## training example
+- something
 - Added first example
 - 2nd line
 - 3rd line
 - 4th line
+- something
 
 ## 1.2.0
 
