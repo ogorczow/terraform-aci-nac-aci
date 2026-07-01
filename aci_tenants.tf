@@ -145,6 +145,7 @@ locals {
             bgp_route_summarization_policy = try(subnet.bgp_route_summarization_policy, null) != null ? "${subnet.bgp_route_summarization_policy}${local.defaults.apic.tenants.policies.bgp_route_summarization_policies.name_suffix}" : null
           }]
         }]
+        monitoring_policy      = try("${vrf.monitoring_policy}${local.defaults.apic.tenants.policies.monitoring.policies.name_suffix}", "")
         vxlan_enabled          = try(vrf.vxlan_stretch, null) != null ? true : false
         border_gateway_set     = try("${vrf.vxlan_stretch.border_gateway_set_policy}${local.defaults.apic.tenants.policies.border_gateway_set_policy.name_suffix}", "")
         normalized_vni         = try(vrf.vxlan_stretch.normalized_vni, null)
@@ -175,6 +176,7 @@ module "aci_vrf" {
   preferred_group                            = each.value.preferred_group
   transit_route_tag_policy                   = each.value.transit_route_tag_policy
   endpoint_retention_policy                  = each.value.endpoint_retention_policy
+  monitoring_policy                          = each.value.monitoring_policy
   ospf_timer_policy                          = each.value.ospf_timer_policy
   ospf_ipv4_address_family_context_policy    = each.value.ospf_ipv4_address_family_context_policy
   ospf_ipv6_address_family_context_policy    = each.value.ospf_ipv6_address_family_context_policy
@@ -239,6 +241,7 @@ module "aci_vrf" {
     module.aci_bgp_timer_policy,
     module.aci_bgp_route_summarization_policy,
     module.aci_endpoint_retention_policy,
+    module.aci_tenant_monitoring_policy,
   ]
 }
 
