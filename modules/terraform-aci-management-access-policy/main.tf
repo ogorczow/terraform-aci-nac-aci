@@ -1,7 +1,6 @@
 locals {
   ssh_kexalgos = join(",", concat(var.ssh_curve25519_sha256 == true ? ["curve25519-sha256"] : [], var.ssh_curve25519_sha256_libssh == true ? ["curve25519-sha256@libssh.org"] : [], var.ssh_dh1_sha1 == true ? ["diffie-hellman-group1-sha1"] : [], var.ssh_dh14_sha1 == true ? ["diffie-hellman-group14-sha1"] : [], var.ssh_dh14_sha256 == true ? ["diffie-hellman-group14-sha256"] : [], var.ssh_dh16_sha512 == true ? ["diffie-hellman-group16-sha512"] : [], var.ssh_ecdh_sha2_nistp256 == true ? ["ecdh-sha2-nistp256"] : [], var.ssh_ecdh_sha2_nistp384 == true ? ["ecdh-sha2-nistp384"] : [], var.ssh_ecdh_sha2_nistp521 == true ? ["ecdh-sha2-nistp521"] : []))
-  # Only ciphers the user explicitly set (non-null) are managed; APIC's cipher
-  # vocabulary differs per release, so there is no safe always-on default set.
+
   https_ssl_ciphers = { for k, v in {
     "ECDHE-ECDSA-AES128-CCM"        = var.https_ssl_cipher_ecdhe_ecdsa_aes128_ccm
     "ECDHE-ECDSA-AES128-GCM-SHA256" = var.https_ssl_cipher_ecdhe_ecdsa_aes128_gcm_sha256
@@ -34,6 +33,18 @@ resource "aci_rest_managed" "commPol" {
   content = {
     name  = var.name
     descr = var.description
+  }
+
+  child {
+    rn         = "https"
+    class_name = "commHttps"
+    content = {
+      sslProtocols = join(",", concat(var.https_tlsv1 == true ? ["TLSv1"] : [], var.https_tlsv1_1 == true ? ["TLSv1.1"] : [], var.https_tlsv1_2 == true ? ["TLSv1.2"] : []))
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [child]
   }
 }
 
@@ -74,6 +85,18 @@ resource "aci_rest_managed" "commHttps" {
     sslProtocols              = join(",", concat(var.https_tlsv1 == true ? ["TLSv1"] : [], var.https_tlsv1_1 == true ? ["TLSv1.1"] : [], var.https_tlsv1_2 == true ? ["TLSv1.2"] : [], var.https_tlsv1_3 == true ? ["TLSv1.3"] : []))
     visoreAccess              = "enabled"
   }
+
+  dynamic "child" {
+    for_each = local.https_ssl_ciphers
+    content {
+      rn         = "cph-${child.key}"
+      class_name = "commCipher"
+      content = {
+        id    = child.key
+        state = child.value ? "enabled" : "disabled"
+      }
+    }
+  }
 }
 
 resource "aci_rest_managed" "commRsKeyRing" {
@@ -81,16 +104,6 @@ resource "aci_rest_managed" "commRsKeyRing" {
   class_name = "commRsKeyRing"
   content = {
     tnPkiKeyRingName = var.https_keyring != "" ? var.https_keyring : "default"
-  }
-}
-
-resource "aci_rest_managed" "commCipher" {
-  for_each   = local.https_ssl_ciphers
-  dn         = "${aci_rest_managed.commHttps.dn}/cph-${each.key}"
-  class_name = "commCipher"
-  content = {
-    id    = each.key
-    state = each.value ? "enabled" : "disabled"
   }
 }
 
